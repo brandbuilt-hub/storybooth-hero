@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StoryBooth</title>
+<style>
+  :root{
+    --bg:#050403;
+    --amber:#ff9d4d;
+    --cream:#f4ede1;
+    --muted:rgba(244,237,225,.6);
+    --bb-color:rgba(244,237,225,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--cream);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+  /* ---------- HERO / 3-STATE REVEAL ---------- */
+  .hero{position:relative;height:400vh}
+  .stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000}
+
+  .layer{position:absolute;inset:0;will-change:opacity,transform}
+  .layer img{width:100%;height:100%;object-fit:cover;object-position:center 46%;display:block}
+
+  /* the "real world" (booth + waterfront) share a scaler so the pull-back is locked */
+  .real{position:absolute;inset:0;will-change:opacity,transform;transform-origin:50% 46%}
+  .real .layer{position:absolute;inset:0}
+
+  /* ambient warmth that breathes under the silhouettes */
+  .breath{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+    background:radial-gradient(closest-side at 50% 44%,rgba(255,150,70,.16),transparent 62%);
+    animation:breathe 8s ease-in-out infinite;will-change:opacity,transform}
+  @keyframes breathe{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+
+  /* film grain for life */
+  .grain{position:absolute;inset:-50%;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grainshift 1.2s steps(3) infinite;will-change:transform}
+  @keyframes grainshift{0%{transform:translate(0,0)}33%{transform:translate(-6%,3%)}66%{transform:translate(4%,-5%)}100%{transform:translate(0,0)}}
+
+  .vignette{position:absolute;inset:0;pointer-events:none;will-change:opacity;
+    background:radial-gradient(closest-side at 50% 50%,transparent 55%,rgba(4,2,1,.42) 92%,#040201 100%)}
+
+  /* copy */
+  .hud{position:absolute;inset:0;pointer-events:none}
+  .headline{position:absolute;left:clamp(24px,6vw,100px);top:clamp(84px,15vh,175px);
+    max-width:min(46ch,44vw);will-change:opacity,transform}
+  .kicker{font-size:clamp(12px,1vw,14px);letter-spacing:.3em;text-transform:uppercase;
+    color:var(--amber);font-weight:600;margin-bottom:20px}
+  .headline h1{font-size:clamp(38px,6vw,96px);line-height:.98;letter-spacing:-.02em;font-weight:680}
+  .headline p{margin-top:22px;font-size:clamp(16px,1.5vw,22px);line-height:1.45;color:var(--muted);max-width:32ch}
+  .cta{margin-top:32px;display:flex;gap:14px;pointer-events:auto}
+  .btn{font:inherit;font-size:15px;font-weight:600;border:0;cursor:pointer;
+    padding:15px 26px;border-radius:100px;text-decoration:none;display:inline-block}
+  .btn-primary{background:var(--cream);color:#140b05}
+  .btn-ghost{background:rgba(244,237,225,.08);color:var(--cream);border:1px solid rgba(244,237,225,.2)}
+
+  .reveal-cap{position:absolute;left:0;right:0;bottom:clamp(28px,6vh,64px);text-align:center;
+    opacity:0;will-change:opacity,transform;font-size:clamp(13px,1.1vw,16px);color:var(--muted)}
+  .reveal-cap b{color:var(--cream);font-weight:600}
+
+  .scrollcue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:rgba(244,237,225,.4);will-change:opacity}
+
+  /* ---------- NEXT SECTION ---------- */
+  .band{padding:clamp(80px,14vh,180px) clamp(24px,7vw,120px)}
+  .band-intro{max-width:1200px;margin:0 auto}
+  .band-intro .kicker{margin-bottom:22px}
+  .band-intro h2{font-size:clamp(30px,4.4vw,64px);line-height:1.02;letter-spacing:-.02em;font-weight:640;max-width:20ch}
+  .band-intro h2 em{font-style:normal;color:var(--amber)}
+  .band-intro .lead{margin-top:26px;font-size:clamp(17px,1.5vw,21px);line-height:1.5;color:var(--muted);max-width:56ch}
+  .shots{margin-top:60px;display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+  .shots figure{border-radius:20px;overflow:hidden;background:#111}
+  .shots img{width:100%;height:100%;object-fit:cover;display:block;aspect-ratio:16/11}
+  @media(max-width:760px){.shots{grid-template-columns:1fr}.headline{max-width:none}}
+
+  footer{padding:60px clamp(24px,7vw,120px) 48px;text-align:center;color:rgba(244,237,225,.4);font-size:13px}
+  .bb-credit{margin-top:14px;font-family:"Caveat","Segoe Script",cursive;font-size:18px;color:var(--bb-color);text-decoration:none;display:inline-block}
+  .bb-credit:hover{color:rgba(244,237,225,.5)}
+</style>
+</head>
+<body>
+
+  <section class="hero" id="hero">
+    <div class="stage">
+
+      <!-- STATE A: intimate silhouettes -->
+      <div class="layer sil" id="sil"><img src="assets/reveal-1-silhouette.png" alt="Two people in silhouette, facing each other in warm light"></div>
+
+      <!-- STATE B+C: the real world, locked together, pulls back -->
+      <div class="real" id="real">
+        <div class="layer void"><img src="assets/reveal-2-void.png" alt="The StoryBooth revealed in warm light"></div>
+        <div class="layer booth" id="booth"><img src="assets/reveal-3-booth.png" alt="The StoryBooth at the waterfront at sunset"></div>
+      </div>
+
+      <div class="breath" id="breath"></div>
+      <div class="grain"></div>
+      <div class="vignette" id="vignette"></div>
+
+      <div class="hud">
+        <div class="headline" id="headline">
+          <div class="kicker">StoryBooth</div>
+          <h1>Everything else<br>disappears.</h1>
+          <p>Two people, one conversation, and the warmth between them.</p>
+          <div class="cta">
+            <a class="btn btn-primary" href="#">Book the booth</a>
+            <a class="btn btn-ghost" href="#next">See how it works</a>
+          </div>
+        </div>
+        <div class="reveal-cap" id="revealcap">
+          Waterfront, golden hour — <b>a booth that turns a moment into a recording.</b>
+        </div>
+      </div>
+
+      <div class="scrollcue" id="scrollcue">Scroll</div>
+    </div>
+  </section>
+
+  <section class="band" id="next">
+    <div class="band-intro">
+      <div class="kicker">The experience</div>
+      <h2>The circle isn't a logo. <em>It's the room.</em></h2>
+      <p class="lead">Placeholder copy — swap for verified StoryBooth language. Two seats, two mics, and a view worth talking in front of. Wherever it lands, people lean in and start telling the truth.</p>
+      <div class="shots">
+        <figure><img src="assets/booth-030.jpg" alt="Inside the StoryBooth"></figure>
+        <figure><img src="assets/venue-028.jpg" alt="The StoryBooth at a waterfront event"></figure>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    StoryBooth — visual prototype
+    <br><a class="bb-credit" href="https://brandbuilt.co">Web Design by Brand Built</a>
+  </footer>
+
+<script>
+  const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+  const ss=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
+
+  const hero=document.getElementById('hero');
+  const sil=document.getElementById('sil');
+  const real=document.getElementById('real');
+  const booth=document.getElementById('booth');
+  const breath=document.getElementById('breath');
+  const headline=document.getElementById('headline');
+  const revealcap=document.getElementById('revealcap');
+  const scrollcue=document.getElementById('scrollcue');
+  const vignette=document.getElementById('vignette');
+
+  let ticking=false;
+  function apply(){
+    ticking=false;
+    const rect=hero.getBoundingClientRect();
+    const total=hero.offsetHeight-window.innerHeight;
+    const p=clamp(-rect.top/total,0,1);
+
+    // A -> (B/C): silhouettes hand off to the real world
+    sil.style.opacity=(1-ss(0.26,0.44,p)).toFixed(3);
+    sil.style.transform='scale('+(1+0.06*ss(0,0.44,p))+')';
+
+    real.style.opacity=ss(0.28,0.44,p).toFixed(3);
+    // pull-back: real world enters large (matching the intimate framing) then settles
+    real.style.transform='scale('+(1.30-0.30*ss(0.28,0.58,p))+')';
+
+    // B -> C: booth-in-void crossfades to the waterfront
+    booth.style.opacity=ss(0.64,0.82,p).toFixed(3);
+
+    // atmosphere + copy
+    breath.style.opacity=(1-ss(0.22,0.42,p)).toFixed(3);
+    headline.style.opacity=(1-ss(0.08,0.28,p)).toFixed(3);
+    headline.style.transform='translateY('+(-24*ss(0.08,0.28,p))+'px)';
+    revealcap.style.opacity=ss(0.80,0.95,p).toFixed(3);
+    revealcap.style.transform='translateY('+(20*(1-ss(0.80,0.95,p)))+'px)';
+    scrollcue.style.opacity=(1-ss(0,0.12,p)).toFixed(3);
+    // let the world open up as the waterfront arrives
+    vignette.style.opacity=(1-0.55*ss(0.62,0.92,p)).toFixed(3);
+  }
+  function onScroll(){if(!ticking){ticking=true;requestAnimationFrame(apply);}}
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll,{passive:true});
+  apply();
+</script>
+</body>
+</html>
