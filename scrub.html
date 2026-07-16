@@ -11,7 +11,7 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-  .hero{position:relative;height:640vh}
+  .hero{position:relative;height:600vh}
   .stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000}
   #frame{position:absolute;inset:0;width:100%;height:100%;display:block}
 
@@ -78,7 +78,7 @@
   <footer>StoryBooth — scroll-reveal prototype<br><a class="bb-credit" href="https://brandbuilt.co">Web Design by Brand Built</a></footer>
 
 <script>
-  const N=226, PAD=4;
+  const N=449, START=64, PAD=4;   // START = first frame shown at top of scroll (48fps interpolated set)
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   const ss=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
 
@@ -96,7 +96,7 @@
   for(let i=0;i<N;i++){
     const im=new Image();
     im.onload=()=>{loaded++; if(loaded===Math.min(N,48)){loader.classList.add('hidden');} render();};
-    im.src=`assets/scrub/f_${String(i+1).padStart(PAD,'0')}.jpg`;
+    im.src=`assets/scrub/f_${String(i+1).padStart(PAD,'0')}.webp`;
     frames[i]=im;
   }
 
@@ -121,11 +121,11 @@
     const total=hero.offsetHeight-innerHeight;
     return clamp(-rect.top/total,0,1);
   }
-  let raf=false;
+  // smoothed scrub: the frame chases the scroll position for a weighted, buttery feel
+  let target=0, current=0, animating=false;
   function render(){
-    raf=false;
-    const p=progress();
-    let idx=Math.round(p*(N-1));
+    const p=current;
+    let idx=START+Math.round(p*(N-1-START));
     // fall back to nearest loaded frame if this one hasn't arrived
     let img=frames[idx];
     if(!(img&&img.complete&&img.naturalWidth)){
@@ -144,9 +144,19 @@
     scrollcue.style.opacity=(1-ss(0,0.08,p)).toFixed(3);
     vignette.style.opacity=(1-0.5*ss(0.55,0.95,p)).toFixed(3);
   }
-  function onScroll(){if(!raf){raf=true;requestAnimationFrame(render);}}
+  function tick(){
+    current+=(target-current)*0.12;
+    if(Math.abs(target-current)<0.0006) current=target;
+    render();
+    if(current!==target){requestAnimationFrame(tick);} else {animating=false;}
+  }
+  function onScroll(){
+    target=progress();
+    if(!animating){animating=true;requestAnimationFrame(tick);}
+  }
   window.addEventListener('scroll',onScroll,{passive:true});
-  window.addEventListener('resize',resize,{passive:true});
+  window.addEventListener('resize',()=>{target=progress();current=target;resize();},{passive:true});
+  target=progress();current=target;
   resize();
 </script>
 </body>

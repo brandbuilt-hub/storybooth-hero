@@ -1,0 +1,145 @@
+<!-- ===== StoryBooth scroll-reveal hero — paste this whole block into ONE Squarespace Code Block ===== -->
+<div id="sbb-spacer" aria-hidden="true"></div>
+
+<style>
+  #sbb-spacer{height:600vh;position:relative;z-index:0;margin:0}
+  .sbb-stage{position:fixed;inset:0;width:100vw;height:100vh;background:#050403;overflow:hidden;display:none;z-index:99990}
+  .sbb-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .sbb-vig{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 75% 90% at 50% 50%,transparent 62%,rgba(4,2,1,.32) 96%,#070403 100%)}
+  .sbb-hud{position:absolute;inset:0;pointer-events:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#f4ede1}
+  .sbb-headline{position:absolute;left:clamp(24px,6vw,100px);top:clamp(84px,15vh,175px);max-width:min(58ch,54vw);will-change:opacity,transform}
+  .sbb-kicker{font-size:clamp(12px,1vw,14px);letter-spacing:.3em;text-transform:uppercase;color:#ff9d4d !important;font-weight:600;margin-bottom:20px}
+  .sbb-headline h1{font-size:clamp(34px,5.2vw,82px);line-height:1;letter-spacing:-.02em;font-weight:680;margin:0;color:#f4ede1 !important;text-transform:none}
+  .sbb-headline p{margin:22px 0 0;font-size:clamp(16px,1.5vw,22px);line-height:1.45;color:rgba(244,237,225,.62) !important;max-width:34ch}
+  .sbb-cta{margin-top:32px;display:flex;gap:14px;pointer-events:auto}
+  .sbb-btn{font:inherit;font-size:15px;font-weight:600;border:0;cursor:pointer;padding:15px 26px;border-radius:100px;text-decoration:none;display:inline-block}
+  .sbb-btn.p{background:#f4ede1;color:#140b05}
+  .sbb-btn.g{background:rgba(244,237,225,.08);color:#f4ede1;border:1px solid rgba(244,237,225,.2)}
+  .sbb-cap{position:absolute;left:0;right:0;bottom:clamp(28px,6vh,64px);text-align:center;opacity:0;will-change:opacity,transform;font-size:clamp(13px,1.1vw,16px);color:rgba(244,237,225,.62) !important}
+  .sbb-cap b{color:#f4ede1 !important;font-weight:600}
+  .sbb-cue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:rgba(244,237,225,.4)}
+  .sbb-loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#050403;color:rgba(244,237,225,.6);font-size:12px;letter-spacing:.2em;text-transform:uppercase;transition:opacity .4s}
+  .sbb-loader.hidden{opacity:0;pointer-events:none}
+  /* keep the Squarespace nav above the reveal; native absolute header scrolls away */
+  .header, #header{z-index:99999 !important}
+</style>
+
+<script>
+(function(){
+  if (window.__sbbInit) return; window.__sbbInit = true;
+
+  // To swap in the final video later: re-extract its frames, set BASE + N to match.
+  var BASE = "https://cdn.jsdelivr.net/gh/brandbuilt-hub/storybooth-hero@76d31476fe9774d87ac035629c5e2b15c5d1e67a/assets/scrub";
+  var N = 449, START = 64, PAD = 4;   // START = first frame shown at top of scroll (48fps interpolated set)
+
+  function clamp(v,a,b){ return Math.min(b, Math.max(a, v)); }
+  function ss(e0,e1,x){ var t=clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); }
+  function pad(n){ n=String(n); while(n.length<PAD) n='0'+n; return n; }
+
+  function start(){
+    var spacer = document.getElementById('sbb-spacer');
+    if (!spacer) return;
+
+    var stage = document.createElement('div');
+    stage.className = 'sbb-stage';
+    stage.innerHTML =
+      '<canvas></canvas>' +
+      '<div class="sbb-vig"></div>' +
+      '<div class="sbb-hud">' +
+        '<div class="sbb-headline">' +
+          '<div class="sbb-kicker">StoryBooth</div>' +
+          '<h1>Everything else<br>disappears.</h1>' +
+          '<p>Two people, one conversation, and the warmth between them.</p>' +
+          '<div class="sbb-cta"><a class="sbb-btn p" href="#">Book the booth</a><a class="sbb-btn g" href="#">See how it works</a></div>' +
+        '</div>' +
+        '<div class="sbb-cap">Waterfront, golden hour &mdash; <b>a booth that turns a moment into a recording.</b></div>' +
+      '</div>' +
+      '<div class="sbb-cue">Scroll</div>' +
+      '<div class="sbb-loader">Loading&hellip;</div>';
+    document.body.appendChild(stage);   // escape Squarespace transformed ancestors so fixed = viewport
+
+    var canvas = stage.querySelector('canvas');
+    var ctx = canvas.getContext('2d');
+    var headline = stage.querySelector('.sbb-headline');
+    var cap = stage.querySelector('.sbb-cap');
+    var cue = stage.querySelector('.sbb-cue');
+    var loader = stage.querySelector('.sbb-loader');
+
+    var frames = new Array(N), loaded = 0;
+    for (var i=0;i<N;i++){
+      var im = new Image();
+      im.onload = (function(){ loaded++; if (loaded===Math.min(N,48)) loader.classList.add('hidden'); kick(); });
+      im.src = BASE + '/f_' + pad(i+1) + '.webp';
+      frames[i] = im;
+    }
+
+    function resize(){
+      var dpr = Math.min(window.devicePixelRatio||1, 2);
+      canvas.width = Math.round(window.innerWidth*dpr);
+      canvas.height = Math.round(window.innerHeight*dpr);
+      canvas.style.width = window.innerWidth+'px';
+      canvas.style.height = window.innerHeight+'px';
+    }
+    function drawCover(img){
+      var cw=canvas.width, ch=canvas.height, ir=img.width/img.height, cr=cw/ch, dw,dh,dx,dy;
+      if (ir>cr){ dh=ch; dw=ch*ir; dx=(cw-dw)/2; dy=0; } else { dw=cw; dh=cw/ir; dx=0; dy=(ch-dh)/2; }
+      ctx.drawImage(img,dx,dy,dw,dh);
+    }
+    function progress(){
+      var r = spacer.getBoundingClientRect();
+      var total = spacer.offsetHeight - window.innerHeight;
+      return clamp(-r.top/total, 0, 1);
+    }
+    function inRange(){
+      var r = spacer.getBoundingClientRect();
+      return r.top < window.innerHeight && r.bottom > 0;
+    }
+    // smoothed scrub: frame chases scroll position; stage translate stays 1:1 with the page
+    var pCur = 0, animating = false, settled = true;
+    function render(){
+      var r = spacer.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var H = spacer.offsetHeight;
+      // fully before or fully past the reveal → hide so other sections are untouched
+      if (r.bottom <= 0 || r.top >= vh){ stage.style.display='none'; animating=false; return; }
+      stage.style.display='block';
+      var ty, pT;
+      if (r.top > 0){ ty = r.top; pT = 0; }               // scrolling in
+      else if (r.bottom < vh){ ty = r.bottom - vh; pT = 1; } // releasing: slide up, next section rises under it
+      else { ty = 0; pT = clamp(-r.top/(H - vh), 0, 1); }  // pinned + scrubbing
+      stage.style.transform = 'translateY(' + ty + 'px)';
+      pCur += (pT - pCur) * 0.12;
+      if (Math.abs(pT - pCur) < 0.0006) pCur = pT;
+      settled = (pCur === pT);
+      var p = pCur;
+      var idx = START + Math.round(p*(N-1-START));
+      var img = frames[idx];
+      if (!(img && img.complete && img.naturalWidth)){
+        for (var d=1; d<N; d++){
+          var a=frames[idx-d], b=frames[idx+d];
+          if (a && a.complete && a.naturalWidth){ img=a; break; }
+          if (b && b.complete && b.naturalWidth){ img=b; break; }
+        }
+      }
+      if (img && img.complete && img.naturalWidth) drawCover(img);
+      headline.style.opacity = (1-ss(0.05,0.22,p));
+      headline.style.transform = 'translateY(' + (-24*ss(0.05,0.22,p)) + 'px)';
+      cap.style.opacity = ss(0.82,0.97,p);
+      cap.style.transform = 'translateY(' + (20*(1-ss(0.82,0.97,p))) + 'px)';
+      cue.style.opacity = (1-ss(0,0.08,p));
+      if (!settled){ requestAnimationFrame(render); } else { animating = false; }
+    }
+    function kick(){ if(!animating){ animating = true; requestAnimationFrame(render); } }
+
+    window.addEventListener('scroll', kick, {passive:true});
+    window.addEventListener('resize', function(){ resize(); kick(); }, {passive:true});
+    resize(); kick();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+<!-- ===== end StoryBooth block ===== -->
