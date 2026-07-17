@@ -31,7 +31,7 @@
   if (window.__sbbInit) return; window.__sbbInit = true;
 
   // To swap in the final video later: re-extract its frames, set BASE + N to match.
-  var BASE = "https://cdn.jsdelivr.net/gh/brandbuilt-hub/storybooth-hero@76d31476fe9774d87ac035629c5e2b15c5d1e67a/assets/scrub";
+  var BASE = "https://cdn.jsdelivr.net/gh/brandbuilt-hub/storybooth-hero@747294a69a69e902bf2e47f1abba0b11221101ff/assets/scrub";
   var N = 449, START = 64, PAD = 4;   // START = first frame shown at top of scroll (48fps interpolated set)
 
   function clamp(v,a,b){ return Math.min(b, Math.max(a, v)); }
@@ -74,6 +74,9 @@
       im.src = BASE + '/f_' + pad(i+1) + '.webp';
       frames[i] = im;
     }
+    // 4K money shot: fades in over the video frame as the camera settles
+    var hires = new Image();
+    hires.src = BASE + '/final-4k.webp';
 
     function resize(){
       var dpr = Math.min(window.devicePixelRatio||1, 2);
@@ -124,6 +127,12 @@
         }
       }
       if (img && img.complete && img.naturalWidth) drawCover(img);
+      // focus-pull into the 4K product frame at the very end
+      if (p>0.93 && hires.complete && hires.naturalWidth){
+        ctx.globalAlpha = ss(0.93,1,p);
+        drawCover(hires);
+        ctx.globalAlpha = 1;
+      }
       headline.style.opacity = (1-ss(0.05,0.22,p));
       headline.style.transform = 'translateY(' + (-24*ss(0.05,0.22,p)) + 'px)';
       cap.style.opacity = ss(0.82,0.97,p);

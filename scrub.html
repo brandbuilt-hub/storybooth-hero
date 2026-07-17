@@ -99,6 +99,9 @@
     im.src=`assets/scrub/f_${String(i+1).padStart(PAD,'0')}.webp`;
     frames[i]=im;
   }
+  // 4K money shot: fades in over the video frame as the camera settles (same content, higher fidelity)
+  const hires=new Image();
+  hires.src='assets/scrub/final-4k.webp';
 
   function resize(){
     const dpr=Math.min(window.devicePixelRatio||1,2);
@@ -136,6 +139,12 @@
       }
     }
     if(img&&img.complete&&img.naturalWidth) drawCover(img);
+    // focus-pull into the 4K product frame at the very end
+    if(p>0.93&&hires.complete&&hires.naturalWidth){
+      ctx.globalAlpha=ss(0.93,1,p);
+      drawCover(hires);
+      ctx.globalAlpha=1;
+    }
     // copy choreography
     headline.style.opacity=(1-ss(0.05,0.22,p)).toFixed(3);
     headline.style.transform='translateY('+(-24*ss(0.05,0.22,p))+'px)';
