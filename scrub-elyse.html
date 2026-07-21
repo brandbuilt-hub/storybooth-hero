@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StoryBooth — Elyse-style hero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#050403;--cream:#f4ede1;--sage:#cfe0c3;--muted:rgba(244,237,225,.62);--bb-color:rgba(244,237,225,.28)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--cream);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .serif{font-family:"Fraunces",Georgia,serif}
+
+  .hero{position:relative;height:600vh}
+  .stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000}
+  #frame{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  .loader{position:absolute;inset:0;display:grid;place-items:center;background:#050403;z-index:5;
+    color:var(--muted);font-size:12px;letter-spacing:.24em;text-transform:uppercase;transition:opacity .4s}
+  .loader.hidden{opacity:0;pointer-events:none}
+
+  .vignette{position:absolute;inset:0;pointer-events:none;will-change:opacity;
+    background:radial-gradient(ellipse 75% 90% at 50% 50%,transparent 62%,rgba(4,2,1,.32) 96%,#070403 100%)}
+
+  .hud{position:absolute;inset:0;pointer-events:none}
+
+  /* ---------- Elyse-style nav ---------- */
+  .nav{position:absolute;top:0;left:0;right:0;pointer-events:auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:clamp(18px,2.6vh,30px) clamp(24px,4.5vw,72px) clamp(16px,2.2vh,26px)}
+  .nav::after{content:"";position:absolute;left:clamp(24px,4.5vw,72px);right:clamp(24px,4.5vw,72px);bottom:0;
+    height:1px;background:rgba(244,237,225,.22)}
+  .nav-mark{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:clamp(17px,1.4vw,21px);
+    letter-spacing:.12em;text-transform:uppercase;color:var(--cream);text-decoration:none}
+  .nav-mark b{font-weight:500;color:var(--sage)}
+  .nav-links{display:flex;gap:clamp(20px,3vw,44px);position:absolute;left:50%;transform:translateX(-50%)}
+  .nav-links a{font-family:"Fraunces",Georgia,serif;font-weight:400;font-size:clamp(11px,.95vw,13.5px);
+    letter-spacing:.2em;text-transform:uppercase;color:rgba(244,237,225,.85);text-decoration:none;white-space:nowrap}
+  .nav-links a:hover{color:var(--cream)}
+  .nav-cta{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:clamp(11px,.95vw,13.5px);
+    letter-spacing:.18em;text-transform:uppercase;color:#140b05;background:var(--cream);
+    padding:.85em 1.7em;border-radius:100px;text-decoration:none;white-space:nowrap}
+  @media(max-width:900px){.nav-links{display:none}}
+
+  /* ---------- giant display wordmark, lower-left ---------- */
+  .display-mark{position:absolute;left:clamp(20px,3.4vw,56px);bottom:clamp(18px,5vh,54px);
+    font-family:"Fraunces",Georgia,serif;font-weight:480;font-optical-sizing:auto;
+    font-size:clamp(64px,12.5vw,220px);line-height:.82;letter-spacing:-.015em;
+    color:var(--cream);will-change:opacity,transform;text-shadow:0 2px 60px rgba(0,0,0,.35)}
+  .display-mark b{font-weight:480;color:var(--sage)}
+
+  /* ---------- right column: kicker + para + scroll ---------- */
+  .right-col{position:absolute;right:clamp(24px,4.5vw,72px);bottom:clamp(120px,24vh,270px);
+    width:min(36ch,30vw);min-width:260px;will-change:opacity,transform}
+  .kicker{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:430;
+    font-size:clamp(18px,1.65vw,27px);line-height:1.28;letter-spacing:.02em;
+    text-transform:uppercase;color:var(--cream)}
+  .right-col p{margin-top:22px;font-size:clamp(13.5px,1.05vw,15.5px);line-height:1.65;color:var(--muted)}
+  .scrollcue{margin-top:clamp(28px,5vh,56px);font-family:"Fraunces",Georgia,serif;
+    font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:rgba(244,237,225,.55)}
+  @media(max-width:760px){.right-col{right:20px;left:20px;width:auto;bottom:32vh}}
+
+  .reveal-cap{position:absolute;left:0;right:0;bottom:clamp(28px,6vh,64px);text-align:center;
+    opacity:0;will-change:opacity,transform;font-size:clamp(13px,1.1vw,16px);color:var(--muted)}
+  .reveal-cap b{color:var(--cream);font-weight:600}
+
+  /* ---------- next section ---------- */
+  .band{padding:clamp(80px,14vh,180px) clamp(24px,7vw,120px)}
+  .band-intro{max-width:1200px;margin:0 auto}
+  .band-intro h2{font-family:"Fraunces",Georgia,serif;font-weight:480;
+    font-size:clamp(30px,4.4vw,64px);line-height:1.05;letter-spacing:-.01em;max-width:22ch}
+  .band-intro .lead{margin-top:26px;font-size:clamp(16px,1.4vw,19px);line-height:1.6;color:var(--muted);max-width:56ch}
+  footer{padding:60px clamp(24px,7vw,120px) 48px;text-align:center;color:rgba(244,237,225,.4);font-size:13px}
+  .bb-credit{margin-top:14px;font-family:"Caveat","Segoe Script",cursive;font-size:18px;color:var(--bb-color);text-decoration:none;display:inline-block}
+</style>
+</head>
+<body>
+  <section class="hero" id="hero">
+    <div class="stage">
+      <canvas id="frame"></canvas>
+      <div class="vignette" id="vignette"></div>
+
+      <div class="hud">
+        <!-- nav -->
+        <nav class="nav" id="nav">
+          <a class="nav-mark" href="#">Story<b>Booth</b></a>
+          <div class="nav-links">
+            <a href="#">The Experience</a>
+            <a href="#">Occasions</a>
+            <a href="#">How It Works</a>
+          </div>
+          <a class="nav-cta" href="#">Book the Booth</a>
+        </nav>
+
+        <!-- giant wordmark -->
+        <div class="display-mark" id="displaymark">Story<b>Booth</b></div>
+
+        <!-- right column -->
+        <div class="right-col" id="rightcol">
+          <div class="kicker">Step inside.<br>Everything else disappears.</div>
+          <p>A conversation booth for the moments worth keeping — two people, one conversation, and the warmth between them.</p>
+          <div class="scrollcue" id="scrollcue">Scroll</div>
+        </div>
+
+        <div class="reveal-cap" id="revealcap">
+          Waterfront, golden hour — <b>a booth that turns a moment into a recording.</b>
+        </div>
+      </div>
+
+      <div class="loader" id="loader">Loading…</div>
+    </div>
+  </section>
+
+  <section class="band" id="next">
+    <div class="band-intro">
+      <h2>The circle isn't a logo. It's the room.</h2>
+      <p class="lead">Placeholder copy — swap for verified StoryBooth language. Two seats, two mics, and a view worth talking in front of.</p>
+    </div>
+  </section>
+  <footer>StoryBooth — Elyse-style hero prototype
+    <br><a class="bb-credit" href="https://brandbuilt.co">Web Design by Brand Built</a></footer>
+
+<script>
+  const N=449, START=64, PAD=4;
+  const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+  const ss=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
+
+  const hero=document.getElementById('hero');
+  const canvas=document.getElementById('frame');
+  const ctx=canvas.getContext('2d');
+  const loader=document.getElementById('loader');
+  const displaymark=document.getElementById('displaymark');
+  const rightcol=document.getElementById('rightcol');
+  const revealcap=document.getElementById('revealcap');
+  const vignette=document.getElementById('vignette');
+
+  const frames=new Array(N); let loaded=0;
+  for(let i=0;i<N;i++){
+    const im=new Image();
+    im.onload=()=>{loaded++; if(loaded===Math.min(N,48)){loader.classList.add('hidden');} render();};
+    im.src=`assets/scrub/f_${String(i+1).padStart(PAD,'0')}.webp`;
+    frames[i]=im;
+  }
+  const hires=new Image();
+  hires.src='assets/scrub/final-4k.webp';
+
+  function resize(){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=Math.round(innerWidth*dpr);
+    canvas.height=Math.round(innerHeight*dpr);
+    canvas.style.width=innerWidth+'px';
+    canvas.style.height=innerHeight+'px';
+    render();
+  }
+  function drawCover(img){
+    const cw=canvas.width, ch=canvas.height;
+    const ir=img.width/img.height, cr=cw/ch;
+    let dw,dh,dx,dy;
+    if(ir>cr){dh=ch; dw=ch*ir; dx=(cw-dw)/2; dy=0;}
+    else{dw=cw; dh=cw/ir; dx=0; dy=(ch-dh)/2;}
+    ctx.drawImage(img,dx,dy,dw,dh);
+  }
+  function progress(){
+    const rect=hero.getBoundingClientRect();
+    const total=hero.offsetHeight-innerHeight;
+    return clamp(-rect.top/total,0,1);
+  }
+  let target=0, current=0, animating=false;
+  function render(){
+    const p=current;
+    let idx=START+Math.round(p*(N-1-START));
+    let img=frames[idx];
+    if(!(img&&img.complete&&img.naturalWidth)){
+      for(let d=1;d<N;d++){
+        const a=frames[idx-d], b=frames[idx+d];
+        if(a&&a.complete&&a.naturalWidth){img=a;break;}
+        if(b&&b.complete&&b.naturalWidth){img=b;break;}
+      }
+    }
+    if(img&&img.complete&&img.naturalWidth) drawCover(img);
+    if(p>0.93&&hires.complete&&hires.naturalWidth){
+      ctx.globalAlpha=ss(0.93,1,p);
+      drawCover(hires);
+      ctx.globalAlpha=1;
+    }
+    displaymark.style.opacity=(1-ss(0.05,0.2,p)).toFixed(3);
+    displaymark.style.transform='translateY('+(30*ss(0.05,0.2,p))+'px)';
+    rightcol.style.opacity=(1-ss(0.05,0.18,p)).toFixed(3);
+    rightcol.style.transform='translateY('+(-18*ss(0.05,0.18,p))+'px)';
+    revealcap.style.opacity=ss(0.82,0.97,p).toFixed(3);
+    revealcap.style.transform='translateY('+(20*(1-ss(0.82,0.97,p)))+'px)';
+    vignette.style.opacity=(1-0.5*ss(0.55,0.95,p)).toFixed(3);
+  }
+  function tick(){
+    current+=(target-current)*0.12;
+    if(Math.abs(target-current)<0.0006) current=target;
+    render();
+    if(current!==target){requestAnimationFrame(tick);} else {animating=false;}
+  }
+  function onScroll(){
+    target=progress();
+    if(!animating){animating=true;requestAnimationFrame(tick);}
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',()=>{target=progress();current=target;resize();},{passive:true});
+  target=progress();current=target;
+  resize();
+</script>
+</body>
+</html>
